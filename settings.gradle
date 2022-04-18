@@ -1,0 +1,5 @@
+
+rootProject.name = "CleanApi"
+include ':app'
+//清理库
+include ':cleanCore'

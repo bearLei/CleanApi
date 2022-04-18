@@ -1,0 +1,49 @@
+
+
+ext {
+    android = [
+            compileSdkVersion: 30,
+            buildToolsVersion: "30.0.3",
+            support_lib_ver  : "30.0.0",
+            minSdkVersion    : 21,
+            targetSdkVersion : 30,
+            versionCode      : 1005,
+            versionName      : "1.0.5",
+    ]
+
+    roomVersion = '2.3.0'
+    rxjava_ver = "3.0.11"
+    lifecycleVersion = '2.2.0'
+
+
+    room = "androidx.room:room-runtime:$roomVersion"
+    room_apt = "androidx.room:room-compiler:$roomVersion"
+    room_coroutine = "androidx.room:room-ktx:$roomVersion"
+
+
+    // 三方库
+    rxjava_ver = "3.0.11"
+    rxjava = "io.reactivex.rxjava3:rxjava:$rxjava_ver"
+    rxandroid = "io.reactivex.rxjava3:rxandroid:3.0.0"
+    rxbinding = "com.jakewharton.rxbinding4:rxbinding:4.0.0"
+    rxrelay = 'com.jakewharton.rxrelay3:rxrelay:3.0.0'  //rx3
+    rxkotlin = 'io.reactivex.rxjava3:rxkotlin:3.0.1'
+
+
+    lifecycle = "androidx.lifecycle:lifecycle-extensions:$lifecycleVersion"
+    lifecycle_java8 = "androidx.lifecycle:lifecycle-common-java8:$lifecycleVersion"
+    lifecycle_runtime_ktx = "androidx.lifecycle:lifecycle-runtime-ktx:$lifecycleVersion"
+    lifecycle_process = "androidx.lifecycle:lifecycle-process:$lifecycleVersion"
+
+
+    okhttp3_ver = "4.7.1"
+    okhttp3 = "com.squareup.okhttp3:okhttp:${okhttp3_ver}"
+    okhttp3_log = "com.squareup.okhttp3:logging-interceptor:${okhttp3_ver}"
+
+    retrofit2_ver = "2.8.2"
+    retrofit2 = "com.squareup.retrofit2:retrofit:${retrofit2_ver}"
+    retrofit2_gson = "com.squareup.retrofit2:converter-gson:${retrofit2_ver}"
+    retrofit2_rxjava = "com.squareup.retrofit2:adapter-rxjava:${retrofit2_ver}"
+    retrofit2_rxjava2 = "com.squareup.retrofit2:adapter-rxjava2:${retrofit2_ver}"
+    retrofit2_rxjava3 = "com.github.akarnokd:rxjava3-retrofit-adapter:3.0.0"
+}

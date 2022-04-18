@@ -1,0 +1,56 @@
+plugins {
+    id 'com.android.library'
+    id 'kotlin-android'
+    id 'kotlin-kapt'
+    id 'kotlin-android-extensions'
+}
+
+android {
+     compileSdk 30
+
+    defaultConfig {
+        minSdkVersion rootProject.android.minSdkVersion
+        targetSdkVersion rootProject.android.targetSdkVersion
+        versionCode rootProject.android.versionCode
+        versionName rootProject.android.versionName
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+dependencies {
+    testImplementation 'junit:junit:4.+'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.2'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
+    implementation 'androidx.documentfile:documentfile:1.0.1'
+
+    implementation (rootProject.rxandroid)
+    implementation (rootProject.rxjava)
+
+    implementation (rootProject.lifecycle)
+    implementation (rootProject.lifecycle_java8)
+    implementation (rootProject.lifecycle_runtime_ktx)
+    implementation (rootProject.lifecycle_process)
+
+    kapt(rootProject.room_apt)
+    implementation(rootProject.room)
+    implementation(rootProject.room_coroutine)
+
+
+    api rootProject.okhttp3
+    api rootProject.okhttp3_log
+    api(rootProject.retrofit2) {
+        exclude group: 'com.squareup.okhttp3'
+    }
+    api rootProject.retrofit2_gson
+    api rootProject.retrofit2_rxjava3
+}
