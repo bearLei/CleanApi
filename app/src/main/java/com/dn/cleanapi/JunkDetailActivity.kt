@@ -14,6 +14,7 @@ import com.dn.cleanapi.viewbinder.AbstractViewBinder
 import com.dn.cleanapi.viewbinder.JunkDetailChildViewHolder
 import com.dn.cleanapi.viewbinder.JunkDetailParentViewHolder
 import com.drakeet.multitype.MultiTypeAdapter
+import com.mckj.api.client.base.JunkClientNew
 import com.mckj.api.entity.AppJunk
 
 /**
@@ -46,6 +47,9 @@ class JunkDetailActivity:AppCompatActivity() {
 
         mModel.mSelectSizeLiveData.observe(this) {
             mBinding.junkDetailBtn.text = "清理 ${FileUtil.getFileSizeText(it)}"
+        }
+        mBinding.junkDetailBtn.setOnClickListener {
+//            JunkClientNew.instance.scan()
         }
     }
 

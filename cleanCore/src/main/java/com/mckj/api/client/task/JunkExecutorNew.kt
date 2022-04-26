@@ -1,17 +1,16 @@
 package com.mckj.api.client.task
 
 import android.util.Log
-import androidx.lifecycle.MutableLiveData
 import com.mckj.api.client.JunkConstants
-import com.mckj.api.client.JunkExecutor
 import com.mckj.api.client.base.JunkClientNew
+import com.mckj.api.client.impl.ICleanCallBack
+import com.mckj.api.client.impl.IScanCallBack
 import com.mckj.api.client.task.base.BaseTask
 import com.mckj.api.entity.*
 import com.mckj.api.util.FileUtils
 import com.mckj.api.util.RFileUtils
 import com.mckj.api.util.ScopeHelper
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import java.util.concurrent.atomic.AtomicBoolean
 

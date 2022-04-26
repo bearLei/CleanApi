@@ -1,15 +1,16 @@
 package com.mckj.api.client.base
 
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.mckj.api.client.JunkConstants
-import com.mckj.api.client.task.IScanCallBack
+import com.mckj.api.client.impl.IClientAbility
+import com.mckj.api.client.impl.IScanCallBack
 import com.mckj.api.client.task.JunkExecutorNew
 import com.mckj.api.entity.AppJunk
 import com.mckj.api.entity.CacheJunk
+import com.mckj.api.entity.JunkInfo
 import com.mckj.api.entity.ScanBean
 
-class JunkClientNew {
+class JunkClientNew : IClientAbility {
 
     companion object {
         const val TAG = "JunkClient"
@@ -25,8 +26,8 @@ class JunkClientNew {
      * @param executor 执行器
      * 首页扫描
      */
-    fun scanByHome(executor: JunkExecutorNew) {
-        val cacheJunk = CacheJunk(junkSize = 0L,appJunks = mutableListOf())
+    override fun scanByHome(executor: JunkExecutorNew) {
+        val cacheJunk = CacheJunk(junkSize = 0L, appJunks = mutableListOf())
         val scanBean = ScanBean(junk = cacheJunk)
         executor.scan(object : IScanCallBack {
             override fun scanStart() {
@@ -53,8 +54,10 @@ class JunkClientNew {
         })
     }
 
-
-    fun scan(executor: JunkExecutorNew) {
+    /**
+     * 普通执行器扫描
+     */
+    override fun scan(executor: JunkExecutorNew) {
         executor.scan(object : IScanCallBack {
             override fun scanStart() {
 
@@ -75,14 +78,29 @@ class JunkClientNew {
         })
     }
 
-    fun scan(executor: JunkExecutorNew, iScanCallBack: IScanCallBack) {
+    /**
+     * @param iScanCallBack 扫描回调
+     */
+    override fun scan(executor: JunkExecutorNew, iScanCallBack: IScanCallBack) {
         executor.scan(iScanCallBack)
     }
 
+    override fun clean(list: MutableList<JunkInfo>) {
+
+    }
+
+    override fun silentClean(list: MutableList<JunkInfo>) {
+
+    }
+
+    override fun stop(executor: JunkExecutorNew) {
+
+    }
 
 
-    fun getHomeScanLiveData():MutableLiveData<ScanBean>{
+    fun getHomeScanLiveData(): MutableLiveData<ScanBean> {
         return mHomeLiveData
     }
+
 
 }

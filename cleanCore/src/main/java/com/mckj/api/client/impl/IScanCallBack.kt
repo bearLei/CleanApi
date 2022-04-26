@@ -1,4 +1,4 @@
-package com.mckj.api.client.task
+package com.mckj.api.client.impl
 
 import com.mckj.api.entity.AppJunk
 

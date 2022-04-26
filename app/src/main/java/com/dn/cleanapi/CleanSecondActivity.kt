@@ -1,15 +1,14 @@
 package com.dn.cleanapi
 
 import android.os.Bundle
-import android.util.Log
 import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.mckj.api.client.task.CleanCooperation
-import com.mckj.api.client.task.ICleanCallBack
-import com.mckj.api.client.task.IScanCallBack
+import com.mckj.api.client.impl.ICleanCallBack
+import com.mckj.api.client.impl.IScanCallBack
 import com.mckj.api.entity.AppJunk
 import com.mckj.api.entity.JunkInfo
 import com.mckj.api.util.ScopeHelper
