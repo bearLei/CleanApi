@@ -80,13 +80,12 @@ object CleanCooperation {
      *  Executor
      */
     //应用缓存
-    fun getCacheExecutor(monitor: JunkExecutor.CleanMonitor? = null): JunkExecutor {
+    fun getCacheExecutor(): JunkExecutorNew {
         val tasks = mutableListOf<BaseTask>()
         tasks.add(getCommonCacheTask())
-        return JunkExecutor.Builder()
+        return JunkExecutorNew.Builder()
             .type(JunkConstants.Session.APP_CACHE)
-            .task(tasks)
-            .cleanMonitor(monitor).build()
+            .task(tasks).build()
     }
 
     //apk清理
@@ -98,7 +97,6 @@ object CleanCooperation {
             .task(tasks)
             .cleanMonitor(monitor).build()
     }
-
     //残留清理
     fun getResidualCleanExecutor(monitor: JunkExecutor.CleanMonitor? = null): JunkExecutor {
         val tasks = mutableListOf<BaseTask>()

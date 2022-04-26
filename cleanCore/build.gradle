@@ -33,17 +33,20 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
     implementation 'androidx.documentfile:documentfile:1.0.1'
 
-    implementation (rootProject.rxandroid)
-    implementation (rootProject.rxjava)
+    api (rootProject.rxandroid)
+    api (rootProject.rxjava)
+    api (rootProject.rxbinding)
+    api (rootProject.rxkotlin)
+    api (rootProject.rxrelay)
 
-    implementation (rootProject.lifecycle)
-    implementation (rootProject.lifecycle_java8)
-    implementation (rootProject.lifecycle_runtime_ktx)
-    implementation (rootProject.lifecycle_process)
+    api (rootProject.lifecycle)
+    api (rootProject.lifecycle_java8)
+    api (rootProject.lifecycle_runtime_ktx)
+    api (rootProject.lifecycle_process)
 
     kapt(rootProject.room_apt)
-    implementation(rootProject.room)
-    implementation(rootProject.room_coroutine)
+    api(rootProject.room)
+    api(rootProject.room_coroutine)
 
 
     api rootProject.okhttp3
@@ -53,4 +56,5 @@ dependencies {
     }
     api rootProject.retrofit2_gson
     api rootProject.retrofit2_rxjava3
+    api rootProject.startup_runtime
 }

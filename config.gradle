@@ -14,7 +14,7 @@ ext {
     roomVersion = '2.3.0'
     rxjava_ver = "3.0.11"
     lifecycleVersion = '2.2.0'
-
+    workVersion = '2.4.0'
 
     room = "androidx.room:room-runtime:$roomVersion"
     room_apt = "androidx.room:room-compiler:$roomVersion"
@@ -46,4 +46,11 @@ ext {
     retrofit2_rxjava = "com.squareup.retrofit2:adapter-rxjava:${retrofit2_ver}"
     retrofit2_rxjava2 = "com.squareup.retrofit2:adapter-rxjava2:${retrofit2_ver}"
     retrofit2_rxjava3 = "com.github.akarnokd:rxjava3-retrofit-adapter:3.0.0"
+
+    work = "androidx.work:work-runtime:$workVersion"
+    work_kt = "androidx.work:work-runtime-ktx:$workVersion"
+
+    concurrentKt = "androidx.concurrent:concurrent-futures-ktx:1.1.0"
+
+    startup_runtime = "androidx.startup:startup-runtime:1.0.0"
 }

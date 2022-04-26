@@ -3,7 +3,8 @@ package com.mckj.api.impl.junk
 import com.mckj.api.db.JunkDatabase
 import com.mckj.api.db.dao.JunkDbDao
 import com.mckj.api.db.entity.JunkDbEntity
-//import com.tz.gg.appproxy.config.AESUtil
+import com.mckj.api.util.AESUtil
+
 
 /**
  * @author leix
@@ -43,18 +44,18 @@ class JunkDbImplWrap : IJunkDb {
     }
 
     private fun decrypt(list: List<JunkDbEntity>?): List<JunkDbEntity>? {
-//        list?.let {
-//            for (bean in it) {
-//                val filePath = bean.filePath
-//                val rootPath = bean.rootPath
-//                if (!filePath.isNullOrEmpty()) {
-//                    bean.filePath = AESUtil.d(filePath).replace("\"","")
-//                }
-//                if (!rootPath.isNullOrEmpty()) {
-//                    bean.rootPath = AESUtil.d(rootPath).replace("\"","")
-//                }
-//            }
-//        }
+        list?.let {
+            for (bean in it) {
+                val filePath = bean.filePath
+                val rootPath = bean.rootPath
+                if (!filePath.isNullOrEmpty()) {
+                    bean.filePath = AESUtil.d(filePath).replace("\"","")
+                }
+                if (!rootPath.isNullOrEmpty()) {
+                    bean.rootPath = AESUtil.d(rootPath).replace("\"","")
+                }
+            }
+        }
         return list
     }
 }

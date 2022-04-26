@@ -20,6 +20,10 @@ class JunkClient {
         val instance: JunkClient by lazy(LazyThreadSafetyMode.SYNCHRONIZED) { JunkClient() }
     }
 
+
+
+
+
     private val mExecutorMap: MutableMap<Int, JunkExecutor> by lazy { mutableMapOf() }
 
 

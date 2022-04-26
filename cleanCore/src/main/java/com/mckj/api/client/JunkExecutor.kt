@@ -45,6 +45,7 @@ class JunkExecutor internal constructor(builder: Builder) {
     private val mRunning = AtomicBoolean(false)
 
 
+
     fun scan() {
         ScopeHelper.launch {
             withContext(Dispatchers.IO) {

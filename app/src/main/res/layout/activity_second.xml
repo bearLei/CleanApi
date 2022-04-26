@@ -16,16 +16,25 @@
         android:id="@+id/scan_cache"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:text="缓存扫描"
         android:layout_below="@id/result"
-        android:layout_marginTop="10dp"
-        android:text="开始扫描" />
-
-
+        android:layout_centerHorizontal="true"
+        />
     <Button
-        android:id="@+id/forward_next"
+        android:id="@+id/clean_cache"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:text="缓存清理"
         android:layout_below="@id/scan_cache"
-        android:layout_marginTop="10dp"
-        android:text="进入二级页面扫描" />
+        android:layout_centerHorizontal="true"
+        />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/junk_list"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/clean_cache"
+        />
+
+
 </RelativeLayout>
