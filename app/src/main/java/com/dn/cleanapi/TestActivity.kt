@@ -25,6 +25,8 @@ import com.tbruyelle.rxpermissions3.RxPermissions
 class TestActivity : AppCompatActivity() {
     private lateinit var mResult: TextView
     private var mScanBean: ScanBean? = null
+    private var mStartTime: Long = 0L
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.test_acty)
@@ -50,7 +52,7 @@ class TestActivity : AppCompatActivity() {
             mScanBean?.junk?.appJunks?.forEach {
                 list.add(it)
             }
-            DataTransport.getInstance().put("junk_list",list)
+            DataTransport.getInstance().put("junk_list", list)
             val intent = Intent(this, JunkDetailActivity::class.java)
             startActivity(intent)
         }
@@ -70,7 +72,8 @@ class TestActivity : AppCompatActivity() {
             }
             val junk = it.junk
             val junkSize = junk?.junkSize
-            mResult.text = "扫描状态：$status\n 扫描结果：${FileUtil.getFileSizeText(junkSize!!)}"
+            val cost = System.currentTimeMillis() - mStartTime
+            mResult.text = "扫描状态：$status\n扫描结果：${FileUtil.getFileSizeText(junkSize!!)}\n扫描耗时：$cost"
         }
     }
 
@@ -78,6 +81,7 @@ class TestActivity : AppCompatActivity() {
      * 首页扫描
      */
     private fun startScanHome() {
+        mStartTime = System.currentTimeMillis()
         val executor = CleanCooperation.getCacheExecutor()
         JunkClientNew.instance.scanByHome(executor)
     }

@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.dn.cleanapi.databinding.CleanupFragmentJunkDetailBinding
@@ -41,6 +42,10 @@ class JunkDetailActivity:AppCompatActivity() {
         mModel.init(appJunk)
         mModel.mDetailLiveData.observe(this) {
             setAdapter(it)
+        }
+
+        mModel.mSelectSizeLiveData.observe(this) {
+            mBinding.junkDetailBtn.text = "清理 ${FileUtil.getFileSizeText(it)}"
         }
     }
 
