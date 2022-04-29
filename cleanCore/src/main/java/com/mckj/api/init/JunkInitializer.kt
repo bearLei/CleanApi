@@ -1,24 +1,19 @@
 package com.mckj.api.init
 
-import android.os.Message
 import android.util.Log
 import com.mckj.api.client.JunkConstants
 import com.mckj.api.client.impl.IScanCallBack
 import com.mckj.api.client.task.CleanCooperation
 import com.mckj.api.client.task.JunkExecutorNew
-import com.mckj.api.db.CacheDatabase
 import com.mckj.api.db.entity.CacheDb
 import com.mckj.api.entity.AppJunk
 import com.mckj.api.entity.CacheJunk
 import com.mckj.api.entity.ScanBean
+import com.mckj.api.manager.CacheDbOption
 import com.mckj.api.util.ScopeHelper
-import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.*
-import io.reactivex.rxjava3.schedulers.Schedulers
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.util.logging.Handler
-import java.util.logging.LogRecord
 
 /**
  *
@@ -34,10 +29,6 @@ object JunkInitializer {
         // TODO:  启动1个worker任务，处理定时清理功能
         preScan()
     }
-
-
-    private val mDbPool = mutableListOf<CacheDb>()
-
 
     /**
      *文件预扫描
@@ -66,16 +57,6 @@ object JunkInitializer {
         val scanBean = ScanBean(junk = cacheJunk)
         cacheDb.executorType = executor.mType ?: -1
         cacheDb.scanBean = scanBean
-        var emitter: ObservableEmitter<CacheDb>? = null
-        val observable = Observable.create<CacheDb> {
-            emitter = it
-        }
-        observable.subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe {
-//                Log.d(TAG,"接收到发射：$cacheDb")
-                CacheDatabase.getInstance().getCacheDao().insert(cacheDb)
-            }
         try {
             withContext(Dispatchers.IO) {
                 executor.scan(object : IScanCallBack {
@@ -85,7 +66,7 @@ object JunkInitializer {
                             "执行器：${executor.mType}\nscanStart...执行线程${Thread.currentThread().name}"
                         )
                         scanBean.status = JunkConstants.ScanStatus.START
-                        CacheDatabase.getInstance().getCacheDao().insert(cacheDb)
+                        CacheDbOption.insertCache(cacheDb)
                     }
 
                     override fun scanEnd(totalSize: Long, list: MutableList<AppJunk>) {
@@ -95,14 +76,13 @@ object JunkInitializer {
                             "执行器：${executor.mType}\nscanEnd...\n:总大小:$totalSize\n---总个数${list.size}"
                         )
                         cacheDb.updateTime = System.currentTimeMillis()
-
-                        CacheDatabase.getInstance().getCacheDao().insert(cacheDb)
+                        CacheDbOption.insertCache(cacheDb)
                     }
 
                     override fun scanError() {
                         scanBean.status = JunkConstants.ScanStatus.ERROR
                         Log.d(TAG, "执行器：${executor.mType}\nscanError")
-                        CacheDatabase.getInstance().getCacheDao().insert(cacheDb)
+                        CacheDbOption.insertCache(cacheDb)
                     }
 
                     override fun scanIdle(appJunk: AppJunk) {
@@ -115,7 +95,7 @@ object JunkInitializer {
                                 appJunk.junks?.size
                             }"
                         )
-                        CacheDatabase.getInstance().getCacheDao().insert(cacheDb)
+                        CacheDbOption.insertCache(cacheDb)
                     }
                 })
             }
@@ -123,14 +103,6 @@ object JunkInitializer {
             Log.d(TAG, "异常：$e")
         }
     }
-
-
-    private fun getObservable(): Observable<CacheDb> {
-        return Observable.create<CacheDb> {
-
-        }
-    }
-
 
     /**
      * 预扫描的任务列表

@@ -26,8 +26,8 @@ interface CacheDbDao {
     fun update(bean: CacheDb)
 
     @Query("DELETE FROM cachDb")
-    suspend fun deleteAll()
+     fun deleteAll()
 
     @Query("DELETE FROM cachDb where executorType = :type")
-    fun deleteByType(type: Long)
+    fun deleteByType(type: Int)
 }

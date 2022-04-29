@@ -173,7 +173,7 @@ class JunkDetailViewModel : ViewModel() {
     /**
      * 获取选中列表
      */
-    private fun getSelectList(): List<AppJunk> {
+     fun getSelectList(): List<AppJunk> {
         val list = mutableListOf<AppJunk>()
         for (item in mDetailList) {
             val childList = item.childList ?: continue

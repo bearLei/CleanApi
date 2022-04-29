@@ -11,6 +11,7 @@ import com.mckj.api.entity.AppJunk
 import com.mckj.api.entity.CacheJunk
 import com.mckj.api.entity.JunkInfo
 import com.mckj.api.entity.ScanBean
+import com.mckj.api.manager.CacheDbOption
 import com.mckj.api.util.FileUtils
 import com.mckj.api.util.RFileUtils
 
@@ -25,8 +26,6 @@ class JunkClientNew : IClientAbility {
      * 首页扫描数据
      */
     private val mHomeLiveData = MutableLiveData<ScanBean>()
-
-
 
 
     /**
@@ -105,6 +104,7 @@ class JunkClientNew : IClientAbility {
         val removeJunks = mutableListOf<JunkInfo>()
         list.iterator().run {
             iCleanCallBack.cleanStart()
+            Log.d(TAG, "cleanStart!")
             while (hasNext()) {
                 val next = next()
                 if (!delete(next)) {
@@ -112,10 +112,11 @@ class JunkClientNew : IClientAbility {
                 }
                 removeSizeTotal += next.junkSize
                 removeJunks.add(next)
-                Log.d(JunkExecutorNew.TAG, "清理：${next.path}---大小：${next.junkSize}")
+                Log.d(TAG, "清理中：${next.path}\n大小：${next.junkSize}")
                 notifyHomeCache(next)
                 iCleanCallBack.cleanIdle(next)
             }
+            Log.d(TAG, "清理结束")
             iCleanCallBack.cleanEnd(removeSizeTotal, removeJunks)
         }
     }
@@ -138,24 +139,7 @@ class JunkClientNew : IClientAbility {
     }
 
     private fun notifyHomeCache(junkInfo: JunkInfo) {
-        val homeValue = getHomeScanLiveData().value
-        homeValue?.junk?.let {
-            it.appJunks?.forEach { appJunk ->
-                val iterator = appJunk.junks?.iterator()
-                while (iterator?.hasNext() == true) {
-                    val next = iterator.next()
-                    if (next.path == junkInfo.path) {
-                        iterator.remove()//移除颗粒
-                        appJunk.junkSize = appJunk.junkSize - junkInfo.junkSize//app统计颗粒减少
-                        it.junkSize = it.junkSize - junkInfo.junkSize//总扫描大小减少
-                    }
-                }
-            }
-        }
-//        val scanBean = ScanBean()
-//        scanBean.status = JunkConstants.ScanStatus.CLEAN
-//        scanBean.junk = homeValue?.junk
-//        getHomeScanLiveData().postValue(scanBean)
+//        CacheDbOption.getCacheByType()
     }
 
     fun getHomeScanLiveData(): MutableLiveData<ScanBean> {

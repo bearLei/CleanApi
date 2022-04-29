@@ -17,6 +17,7 @@ import com.mckj.api.entity.AppJunk
 import com.mckj.api.entity.CacheJunk
 import com.mckj.api.entity.ScanBean
 import com.mckj.api.init.JunkInitializer
+import com.mckj.api.manager.CacheDbOption
 import com.mckj.api.util.CleanCoreMod
 import com.tbruyelle.rxpermissions3.RxPermissions
 
@@ -64,24 +65,7 @@ class TestActivity : AppCompatActivity() {
 
 
     private fun subscribeUi() {
-//        JunkClientNew.instance.getHomeScanLiveData().observe(this) {
-//            mScanBean = it
-//            val status = when (it.status) {
-//                JunkConstants.ScanStatus.SCAN_IDLE -> "扫描中..."
-//                JunkConstants.ScanStatus.START -> "扫描开始"
-//                JunkConstants.ScanStatus.COMPLETE -> "扫描结束"
-//                JunkConstants.ScanStatus.ERROR -> "扫描错误"
-//                JunkConstants.ScanStatus.CLEAN -> "清理状态"
-//                else -> "默认状态"
-//            }
-//            val junk = it.junk
-//            val junkSize = junk?.junkSize
-//            val cost = System.currentTimeMillis() - mStartTime
-//            mResult.text = "扫描状态：$status\n扫描结果：${FileUtil.getFileSizeText(junkSize!!)}\n扫描耗时：$cost"
-//        }
-
-        CacheDatabase.getInstance().getCacheDao()
-            .getCacheByType(JunkConstants.Session.APP_CACHE)?.observe(this, Observer {
+        CacheDbOption.getCacheByType(JunkConstants.Session.APP_CACHE)?.observe(this, Observer {
                 Log.d("leix", "cacheDb:$it")
                 if (it.scanBean == null) return@Observer
                 mScanBean = it.scanBean
@@ -105,10 +89,9 @@ class TestActivity : AppCompatActivity() {
      * 首页扫描
      */
     private fun startScanHome() {
-//        mStartTime = System.currentTimeMillis()
-//        val executor = CleanCooperation.getCacheExecutor()
-//        JunkClientNew.instance.scanByHome(executor)
-        JunkInitializer.initializeDb()
+        mStartTime = System.currentTimeMillis()
+        val executor = CleanCooperation.getCacheExecutor()
+        JunkClientNew.instance.scanByHome(executor)
     }
 
 

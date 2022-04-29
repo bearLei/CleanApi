@@ -1,6 +1,7 @@
 package com.dn.cleanapi
 
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
@@ -15,7 +16,9 @@ import com.dn.cleanapi.viewbinder.JunkDetailChildViewHolder
 import com.dn.cleanapi.viewbinder.JunkDetailParentViewHolder
 import com.drakeet.multitype.MultiTypeAdapter
 import com.mckj.api.client.base.JunkClientNew
+import com.mckj.api.client.impl.ICleanCallBack
 import com.mckj.api.entity.AppJunk
+import com.mckj.api.entity.JunkInfo
 
 /**
  *
@@ -23,6 +26,10 @@ create by leix on 2022/4/25
 desc:
  */
 class JunkDetailActivity:AppCompatActivity() {
+
+    companion object{
+        const val TAG = "JunkDeailActivity"
+    }
 
     private lateinit var mBinding: CleanupFragmentJunkDetailBinding
 
@@ -49,7 +56,23 @@ class JunkDetailActivity:AppCompatActivity() {
             mBinding.junkDetailBtn.text = "清理 ${FileUtil.getFileSizeText(it)}"
         }
         mBinding.junkDetailBtn.setOnClickListener {
-//            JunkClientNew.instance.scan()
+            val list = mutableListOf<JunkInfo>()
+            mModel.getSelectList().forEach {
+                  list.addAll(it.junks!!)
+            }
+            JunkClientNew.instance.clean(list,object :ICleanCallBack{
+                override fun cleanStart() {
+                    Log.d(TAG,"cleanStart!")
+                }
+
+                override fun cleanIdle(junkInfo: JunkInfo) {
+
+                }
+
+                override fun cleanEnd(totalSize: Long, list: MutableList<JunkInfo>) {
+
+                }
+            })
         }
     }
 
