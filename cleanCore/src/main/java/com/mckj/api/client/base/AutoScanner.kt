@@ -15,7 +15,8 @@ import com.mckj.api.manager.CacheDbOption
 create by leix on 2022/4/29
 desc: 自动监听回调
  */
-class AutoScanner(scanTime: Long) : LifecycleEventObserver {
+class AutoScanner(var type: Int = JunkConstants.Session.APP_CACHE, var atLeastTime: Long) :
+    LifecycleEventObserver {
     companion object {
         const val TAG = "AutoCleaner"
     }
@@ -37,16 +38,15 @@ class AutoScanner(scanTime: Long) : LifecycleEventObserver {
 
     private fun subscribeCacheStatus(source: LifecycleOwner) {
         CacheDbOption.getCacheByType(JunkConstants.Session.APP_CACHE)?.observe(source) {
+            if (it?.scanBean == null) return@observe
             Log.d(
                 TAG,
                 "缓存扫描状态：${it.scanBean?.status}\n扫描大小${it.scanBean?.junk?.junkSize}\n更新时间${it.updateTime}"
             )
-            if (it?.scanBean == null) return@observe
+
             it.scanBean?.apply {
                 cacheJunkLiveData.postValue(this)
             }
         }
     }
-
-
 }

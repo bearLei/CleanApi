@@ -2,22 +2,26 @@ package com.mckj.api.client.base
 
 import android.util.Log
 import androidx.lifecycle.LiveData
+import com.mckj.api.client.JunkConstants
 import com.mckj.api.client.impl.ICleanCallBack
 import com.mckj.api.client.impl.IClientAbility
 import com.mckj.api.client.impl.IScanCallBack
 import com.mckj.api.client.JunkExecutor
 import com.mckj.api.db.entity.CacheDb
+import com.mckj.api.entity.AppJunk
+import com.mckj.api.entity.CacheJunk
 import com.mckj.api.entity.JunkInfo
+import com.mckj.api.entity.ScanBean
 import com.mckj.api.init.JunkInitializer
 import com.mckj.api.manager.CacheDbOption
 import com.mckj.api.util.FileUtils
 import com.mckj.api.util.RFileUtils
 
-class JunkClientNew : IClientAbility {
+class JunkClient : IClientAbility {
 
     companion object {
         const val TAG = "JunkClient"
-        val instance: JunkClientNew by lazy(LazyThreadSafetyMode.SYNCHRONIZED) { JunkClientNew() }
+        val instance: JunkClient by lazy(LazyThreadSafetyMode.SYNCHRONIZED) { JunkClient() }
     }
 
     /**
@@ -25,11 +29,12 @@ class JunkClientNew : IClientAbility {
      * @param iScanCallBack 扫描回调
      */
     override fun scan(executorType: Int, iScanCallBack: IScanCallBack) {
-        JunkInitializer.getExecutor(executorType)?.scan(iScanCallBack)
+        realScan(executorType)
     }
 
     /**
      * @param executorType 执行器类型
+     * @return
      */
     override fun scan(executorType: Int): LiveData<CacheDb>? {
         CacheDbOption.getCacheByType(executorType)?.let {
@@ -37,7 +42,7 @@ class JunkClientNew : IClientAbility {
             return it
         } ?: let {
             Log.d(TAG, "数据库未命中缓存对象:执行文件扫描")
-            JunkInitializer.scan(executorType)
+            realScan(executorType)
             return null
         }
     }
@@ -113,6 +118,71 @@ class JunkClientNew : IClientAbility {
                 }
             }
             CacheDbOption.insertCache(it)
+        }
+    }
+
+
+    /**
+     * @param executor
+     * 文件扫描执行器
+     */
+    fun realScan(type: Int) {
+        val executor = ExecutorManager.getInstance().getExecutor(type) ?: return
+        var cacheDb: CacheDb? = null
+        CacheDbOption.getCacheByType(type)?.let {
+            it.value?.apply {
+                cacheDb = this
+            }
+        }
+        if (cacheDb == null) {
+            cacheDb = CacheDb()
+            cacheDb?.executorType = executor.mType
+        }
+        val cacheJunk = CacheJunk(junkSize = 0L, appJunks = mutableListOf())
+        val scanBean = ScanBean(junk = cacheJunk)
+        cacheDb?.scanBean = scanBean
+        try {
+            executor.scan(object : IScanCallBack {
+                override fun scanStart() {
+                    Log.d(
+                        TAG,
+                        "执行器：${executor.mType}\nscanStart...执行线程${Thread.currentThread().name}"
+                    )
+                    scanBean.status = JunkConstants.ScanStatus.START
+                    CacheDbOption.insertCache(cacheDb)
+                }
+
+                override fun scanEnd(totalSize: Long, list: MutableList<AppJunk>) {
+                    scanBean.status = JunkConstants.ScanStatus.COMPLETE
+                    Log.d(
+                        TAG,
+                        "执行器：${executor.mType}\nscanEnd...\n:总大小:$totalSize\n---总个数${list.size}"
+                    )
+                    cacheDb?.updateTime = System.currentTimeMillis()
+                    CacheDbOption.insertCache(cacheDb)
+                }
+
+                override fun scanError() {
+                    scanBean.status = JunkConstants.ScanStatus.ERROR
+                    Log.d(TAG, "执行器：${executor.mType}\nscanError")
+                    CacheDbOption.insertCache(cacheDb)
+                }
+
+                override fun scanIdle(appJunk: AppJunk) {
+                    scanBean.status = JunkConstants.ScanStatus.SCAN_IDLE
+                    scanBean.junk.appJunks?.add(appJunk)
+                    cacheJunk.junkSize += appJunk.junkSize
+                    Log.d(
+                        TAG,
+                        "执行器：${executor.mType}\nscanIdle....\nName:${appJunk.appName}\n扫描大小${appJunk.junkSize}\n扫描个数${
+                            appJunk.junks?.size
+                        }"
+                    )
+                    CacheDbOption.insertCache(cacheDb)
+                }
+            })
+        } catch (e: Exception) {
+            Log.d(TAG, "异常：$e")
         }
     }
 }

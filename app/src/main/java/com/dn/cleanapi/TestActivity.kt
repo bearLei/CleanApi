@@ -62,7 +62,7 @@ class TestActivity : AppCompatActivity() {
 
 
     private fun subscribeUi() {
-        val autoCleaner = AutoScanner(100)
+        val autoCleaner = AutoScanner(JunkConstants.Session.APP_CACHE,100)
         lifecycle.addObserver(autoCleaner)
         autoCleaner.cacheJunkLiveData.observe(this) {
             mScanBean = it

@@ -5,7 +5,6 @@ import android.util.Log
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
-import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.dn.cleanapi.databinding.CleanupFragmentJunkDetailBinding
@@ -15,7 +14,7 @@ import com.dn.cleanapi.viewbinder.AbstractViewBinder
 import com.dn.cleanapi.viewbinder.JunkDetailChildViewHolder
 import com.dn.cleanapi.viewbinder.JunkDetailParentViewHolder
 import com.drakeet.multitype.MultiTypeAdapter
-import com.mckj.api.client.base.JunkClientNew
+import com.mckj.api.client.base.JunkClient
 import com.mckj.api.client.impl.ICleanCallBack
 import com.mckj.api.entity.AppJunk
 import com.mckj.api.entity.JunkInfo
@@ -60,7 +59,7 @@ class JunkDetailActivity:AppCompatActivity() {
             mModel.getSelectList().forEach {
                   list.addAll(it.junks!!)
             }
-            JunkClientNew.instance.clean(list,object :ICleanCallBack{
+            JunkClient.instance.clean(list,object :ICleanCallBack{
                 override fun cleanStart() {
                     Log.d(TAG,"cleanStart!")
                 }
