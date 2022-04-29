@@ -1,17 +1,9 @@
 package com.mckj.api.client
 
 import android.util.Log
-import androidx.lifecycle.MutableLiveData
+import com.mckj.api.client.impl.IScanCallBack
 import com.mckj.api.client.task.base.BaseTask
 import com.mckj.api.entity.*
-import com.mckj.api.util.FileUtils
-import com.mckj.api.util.RFileUtils
-import com.mckj.api.util.ScopeHelper
-import com.mckj.consumer.Consumer2
-import com.mckj.consumer.Consumer3
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.withContext
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
@@ -25,14 +17,10 @@ class JunkExecutor internal constructor(builder: Builder) {
         const val TAG = "ScanExecutor"
     }
 
-    val mType: Int = builder.mType ?: 0
 
     private val mScanTask: List<BaseTask>? = builder.scanTasks
 
-    //清理监听：需要监听清理结果的可以注册
-    private val mCleanMonitor: CleanMonitor? = builder.mCleanMonitor
-
-    private val mScanData = MutableLiveData<ScanBean>()
+    val mType: Int = builder.mType ?: -1
 
     /**
      * 是否允许操作
@@ -45,288 +33,52 @@ class JunkExecutor internal constructor(builder: Builder) {
     private val mRunning = AtomicBoolean(false)
 
 
-
-    fun scan() {
-//        ScopeHelper.launch {
-//            withContext(Dispatchers.IO) {
-//                val scanBean = ScanBean()
-//                start(scanBean)
-//                val cacheJunk = CacheJunk(junkSize = 0L, appJunks = mutableListOf())
-//                scanBean.junk = cacheJunk
-//                if (mScanTask.isNullOrEmpty()) {
-//                    Log.d(TAG, "scanTask  must not be empty")
-//                    error(scanBean)
-//                    return@withContext
-//                }
-//                if (mRunning.get()) {
-//                    error(scanBean)
-//                    Log.d(TAG, "scanTask  has bean started")
-//                    return@withContext
-//                }
-//                mScanTask.forEach {
-//                    if (mOptEnable.get()) {
-//                        mRunning.set(true)
-//                        val isSuccess = it.scan { appJunk ->
-//                            cacheJunk.appJunks?.add(appJunk)
-//                            cacheJunk.junkSize += appJunk.junkSize
-//                            startIdle(scanBean)
-//                        }
-//                        if (isSuccess) {
-//                            startIdle(scanBean)
-//                            delay(100)
-//                        }
-//                    }
-//                }
-//                complete(scanBean)
-//                mRunning.set(false)
-//            }
-//        }
-    }
-
-    fun loadCache(cacheJunk: CacheJunk?) {
-//        ScopeHelper.launch {
-//            withContext(Dispatchers.IO) {
-//                val scanBean = ScanBean(status = JunkConstants.ScanStatus.CACHE)
-//                scanBean.junk = cacheJunk
-//                mScanData.postValue(scanBean)
-//                Log.d(TAG, "scan cache")
-//            }
-//        }
-    }
-
     /**
-     * 静默扫描 不关注扫描状态
+     * @param iScanCallBack 扫描回调
+     * 扫描
      */
-    suspend fun silentScan(
-        consumer: Consumer3<Int, AppJunk?, CacheJunk?>? = null,
-        block: (cacheJunk: CacheJunk) -> Unit
-    ) {
-        withContext(Dispatchers.IO) {
-            val cacheJunk = CacheJunk(junkSize = 0L, appJunks = mutableListOf())
-            val scanBean = ScanBean(junk = cacheJunk, status = JunkConstants.ScanStatus.SILEN)
-            if (mScanTask.isNullOrEmpty()) {
-                Log.d(TAG, "scanTask  must not be empty")
-                return@withContext
-            }
-            mScanTask.forEach {
-                if (mOptEnable.get()) {
-                    it.scan { appJunk ->
-                        cacheJunk.appJunks?.add(appJunk)
-                        cacheJunk.junkSize += appJunk.junkSize
-                        consumer?.accept(JunkConstants.ScanStatus.SCAN_IDLE, appJunk, cacheJunk)
-                    }
-                }
-            }
-            consumer?.accept(JunkConstants.ScanStatus.COMPLETE, null, cacheJunk)
-            if (mScanData.value== null){
-                mScanData.postValue(scanBean)
-            }
-            return@withContext
+    fun scan(iScanCallBack: IScanCallBack) {
+        if (mScanTask.isNullOrEmpty()) {
+            Log.d(TAG, "scanTask  must not be empty")
+            iScanCallBack.scanError()
+            return
         }
-    }
-
-    /**
-     * 自清理
-     */
-    fun autoClean(block: (junkInfo: JunkInfo) -> Unit) {
-        ScopeHelper.launch {
-            withContext(Dispatchers.IO) {
-                if (mScanTask.isNullOrEmpty()) {
-                    Log.d(TAG, "scanTask  must not be empty")
-                    return@withContext
-                }
-                if (mRunning.get()) {
-                    Log.d(TAG, "scanTask  has bean started")
-                    return@withContext
-                }
-                mScanTask.forEach {
-                    if (mOptEnable.get()) {
-                        mRunning.set(true)
-                        it.scan { appJunk ->
-                            appJunk?.junks?.iterator()?.apply {
-                                while (hasNext()) {
-                                    val next = next()
-                                    if (delete(next)) {
-                                        block.invoke(next)
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                mRunning.set(false)
-                return@withContext
-            }
+        if (mRunning.get()) {
+            iScanCallBack.scanError()
+            Log.d(TAG, "scanTask  has bean started")
+            return
         }
-    }
-
-    /**
-     * 自清理
-     */
-    suspend fun autoCleanBySuspend(block: (junkInfo: JunkInfo) -> Unit) {
-        withContext(Dispatchers.IO) {
-            if (mScanTask.isNullOrEmpty()) {
-                Log.d(TAG, "scanTask  must not be empty")
-                return@withContext
-            }
-            if (mRunning.get()) {
-                Log.d(TAG, "scanTask  has bean started")
-                return@withContext
-            }
+        var totalSize = 0L
+        val junks = mutableListOf<AppJunk>()
+        iScanCallBack.scanStart()
+        Log.d(TAG, "scanStart!!")
+        try {
             mScanTask.forEach {
                 if (mOptEnable.get()) {
                     mRunning.set(true)
                     it.scan { appJunk ->
-                        appJunk?.junks?.iterator()?.apply {
-                            while (hasNext()) {
-                                val next = next()
-                                if (delete(next)) {
-                                    block.invoke(next)
-                                }
-                            }
-                        }
+                        totalSize += appJunk.junkSize
+                        junks.add(appJunk)
+                        Log.d(TAG, "scanning...")
+                        iScanCallBack.scanIdle(appJunk)
                     }
                 }
             }
-            mRunning.set(false)
-            return@withContext
-        }
-    }
-
-    private suspend fun start(scanBean: ScanBean) {
-        scanBean.status = JunkConstants.ScanStatus.START
-        mScanData.postValue(scanBean)
-        Log.d(TAG, "scan start")
-    }
-
-    private fun startIdle(scanBean: ScanBean) {
-        scanBean.status = JunkConstants.ScanStatus.SCAN_IDLE
-        mScanData.postValue(scanBean)
-        Log.d(TAG, "scan startIdle")
-    }
-
-    private fun error(scanBean: ScanBean) {
-        scanBean.status = JunkConstants.ScanStatus.ERROR
-        mScanData.postValue(scanBean)
-        Log.d(TAG, "scan error")
-    }
-
-    private fun complete(scanBean: ScanBean) {
-        scanBean.status = JunkConstants.ScanStatus.COMPLETE
-        mScanData.postValue(scanBean)
-        Log.d(TAG, "scan complete")
-    }
-
-    fun stop() {
-        mOptEnable.set(false)
-    }
-
-    //清理，以最小颗粒执行
-    fun clean(
-        junks: MutableList<JunkInfo>,
-        consumer2: Consumer2<Int, JunkInfo?>? = null,
-        block: ((junkInfo: JunkInfo) -> Unit)? = null
-    ) {
-        ScopeHelper.launch {
-            cleanInSuspend(junks, consumer2, block)
-        }
-    }
-
-    //清理，以最小颗粒执行
-    suspend fun cleanBySuspend(
-        junks: MutableList<JunkInfo>,
-        consumer2: Consumer2<Int, JunkInfo?>? = null,
-        block: ((junkInfo: JunkInfo) -> Unit)? = null,
-        delay: Long?
-    ) {
-        try {
-            cleanInSuspend(junks, consumer2, block, delay)
         } catch (e: Exception) {
-            e.printStackTrace()
+            iScanCallBack.scanError()
+            Log.d(TAG, "scanError!!")
+            mOptEnable.set(false)
+            Log.d(TAG, "scanTask  error:$e")
+        } finally {
+            Log.d(TAG, "scanEnd:scanSize:$totalSize")
+            iScanCallBack.scanEnd(totalSize, junks)
         }
+        mRunning.set(false)
+
     }
-
-    private suspend fun cleanInSuspend(
-        junks: MutableList<JunkInfo>,
-        consumer2: Consumer2<Int, JunkInfo?>? = null,
-        block: ((junkInfo: JunkInfo) -> Unit)?,
-        delay: Long? = 0
-    ) {
-        var cleanSize = 0L
-        val cleanList = mutableListOf<JunkInfo>()
-        val scanData = mScanData.value
-        val cacheJunk = scanData?.junk
-        var scanSize = scanData?.junk?.junkSize ?: 0
-        withContext(Dispatchers.IO) {
-            cacheJunk?.let {
-                junks.iterator().run {
-                    while (hasNext()) {
-                        delay?.let {
-                            delay(it)
-                        }
-                        val next = next()
-                        val isSuccess = delete(next)
-                        if (isSuccess) {
-                            removeFromOrigin(it, next) {
-                                //统计清理大小
-                                cleanSize += next.junkSize
-                                cleanList.add(next)
-                                //刷新剩余大小
-                                scanSize -= next.junkSize
-                                scanData.junk?.junkSize = scanSize
-                                block?.invoke(next)
-                                consumer2?.accept(1, next)
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        withContext(Dispatchers.Main) {
-            Log.d(TAG, "clean complete")
-            scanData?.status = JunkConstants.ScanStatus.CLEAN
-            mScanData.postValue(scanData!!)
-            consumer2?.accept(JunkConstants.ScanStatus.CLEAN, null)
-            mCleanMonitor?.clean(cleanSize, cleanList)
-        }
-    }
-
-    private fun removeFromOrigin(cacheJunk: CacheJunk, junkInfo: JunkInfo, block: () -> Unit) {
-        cacheJunk.appJunks?.iterator()?.apply {
-            while (hasNext()) {
-                val appJunk = next()
-                appJunk.junks?.iterator()?.let {
-                    while (it.hasNext()) {
-                        val next = it.next()
-                        if (next.path == junkInfo.path) {
-                            Log.d(TAG, "hit target：path:${next.path}")
-                            block.invoke()
-                            appJunk.junkSize -= next.junkSize
-                            it.remove()
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private fun delete(junkInfo: JunkInfo): Boolean {
-        junkInfo.uri?.let {
-            return RFileUtils.deleteFile(it)
-        } ?: let {
-            return FileUtils.delete(junkInfo.path)
-        }
-    }
-
-
-    fun getScanData(): MutableLiveData<ScanBean> {
-        return mScanData
-    }
-
 
     class Builder {
         internal var scanTasks: List<BaseTask>? = null
-        internal var mCleanMonitor: CleanMonitor? = null
         internal var mType: Int? = null
 
         fun type(type: Int) = apply {
@@ -337,14 +89,8 @@ class JunkExecutor internal constructor(builder: Builder) {
             this.scanTasks = tasks
         }
 
-        fun cleanMonitor(cleanMonitor: CleanMonitor?) = apply {
-            this.mCleanMonitor = cleanMonitor
-        }
-
         fun build(): JunkExecutor = JunkExecutor(this)
     }
 
-    interface CleanMonitor {
-        fun clean(cleanSize: Long, cleanList: MutableList<JunkInfo>)
-    }
+
 }

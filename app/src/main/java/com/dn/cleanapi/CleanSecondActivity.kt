@@ -78,21 +78,7 @@ class CleanSecondActivity : AppCompatActivity() {
         junks.forEach {
             details.addAll(it.junks!!)
         }
-        ScopeHelper.launch {
-            executor.clean(details, object : ICleanCallBack {
-                override fun cleanStart() {
 
-                }
-
-                override fun cleanIdle(junkInfo: JunkInfo) {
-
-                }
-
-                override fun cleanEnd(totalSize: Long, list: MutableList<JunkInfo>) {
-
-                }
-            })
-        }
     }
 
 }

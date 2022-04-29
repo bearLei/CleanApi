@@ -37,7 +37,7 @@ data class JunkInfo(
     var mediaBean: MediaBean? = null,//媒体资源的话附加媒体信息,
     var tag: Int = -1,//朔源标记位
     var uri: Uri? = null,
-    var uriStr:String = ""
+    var uriStr: String = ""
 ) {
     override fun toString(): String {
         return "\n parent:$parent" +
@@ -48,6 +48,15 @@ data class JunkInfo(
                 "\n junkSize:$junkSize" +
                 "\n path:$path"
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+        other as JunkInfo
+        if (path == other.path) return true
+        return true
+    }
+
 }
 
 //应用颗粒级别的缓存，以应用为1个颗粒

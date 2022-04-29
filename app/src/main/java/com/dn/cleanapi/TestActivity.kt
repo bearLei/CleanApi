@@ -7,19 +7,16 @@ import android.util.Log
 import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.Observer
 import com.mckj.api.client.JunkConstants
-import com.mckj.api.client.base.JunkClientNew
-import com.mckj.api.client.task.CleanCooperation
-import com.mckj.api.client.task.JunkExecutorNew
-import com.mckj.api.db.CacheDatabase
+import com.mckj.api.client.base.AutoScanner
 import com.mckj.api.entity.AppJunk
-import com.mckj.api.entity.CacheJunk
 import com.mckj.api.entity.ScanBean
 import com.mckj.api.init.JunkInitializer
 import com.mckj.api.manager.CacheDbOption
-import com.mckj.api.util.CleanCoreMod
+import com.mckj.api.util.ScopeHelper
 import com.tbruyelle.rxpermissions3.RxPermissions
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /**
  * @author leix
@@ -65,33 +62,35 @@ class TestActivity : AppCompatActivity() {
 
 
     private fun subscribeUi() {
-        CacheDbOption.getCacheByType(JunkConstants.Session.APP_CACHE)?.observe(this, Observer {
-                Log.d("leix", "cacheDb:$it")
-                if (it.scanBean == null) return@Observer
-                mScanBean = it.scanBean
-                val status = when (mScanBean!!.status) {
-                    JunkConstants.ScanStatus.SCAN_IDLE -> "扫描中..."
-                    JunkConstants.ScanStatus.START -> "扫描开始"
-                    JunkConstants.ScanStatus.COMPLETE -> "扫描结束"
-                    JunkConstants.ScanStatus.ERROR -> "扫描错误"
-                    JunkConstants.ScanStatus.CLEAN -> "清理状态"
-                    else -> "默认状态"
-                }
-                val junk = mScanBean?.junk
-                val junkSize = junk?.junkSize
-                val cost = System.currentTimeMillis() - mStartTime
-                mResult.text =
-                    "扫描状态：$status\n扫描结果：${FileUtil.getFileSizeText(junkSize!!)}\n扫描耗时：$cost"
-            })
+        val autoCleaner = AutoScanner(100)
+        lifecycle.addObserver(autoCleaner)
+        autoCleaner.cacheJunkLiveData.observe(this) {
+            mScanBean = it
+            val status = when (mScanBean!!.status) {
+                JunkConstants.ScanStatus.SCAN_IDLE -> "扫描中..."
+                JunkConstants.ScanStatus.START -> "扫描开始"
+                JunkConstants.ScanStatus.COMPLETE -> "扫描结束"
+                JunkConstants.ScanStatus.ERROR -> "扫描错误"
+                JunkConstants.ScanStatus.CLEAN -> "清理状态"
+                else -> "默认状态"
+            }
+            val junk = mScanBean?.junk
+            val junkSize = junk?.junkSize
+            val cost = System.currentTimeMillis() - mStartTime
+            mResult.text =
+                "扫描状态：$status\n扫描结果：${FileUtil.getFileSizeText(junkSize!!)}\n扫描耗时：$cost"
+        }
     }
 
     /**
      * 首页扫描
      */
     private fun startScanHome() {
-        mStartTime = System.currentTimeMillis()
-        val executor = CleanCooperation.getCacheExecutor()
-        JunkClientNew.instance.scanByHome(executor)
+        ScopeHelper.launch {
+            withContext(Dispatchers.IO) {
+                JunkInitializer.scan(JunkConstants.Session.APP_CACHE)
+            }
+        }
     }
 
 

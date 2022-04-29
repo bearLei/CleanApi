@@ -80,36 +80,35 @@ object CleanCooperation {
      *  Executor
      */
     //应用缓存
-    fun getCacheExecutor(): JunkExecutorNew {
+    fun getCacheExecutor(): JunkExecutor {
         val tasks = mutableListOf<BaseTask>()
         tasks.add(getCommonCacheTask())
-        return JunkExecutorNew.Builder()
+        return JunkExecutor.Builder()
             .type(JunkConstants.Session.APP_CACHE)
             .task(tasks).build()
     }
 
     //apk清理
-    fun getApkCleanExecutor(monitor: JunkExecutor.CleanMonitor? = null): JunkExecutor {
+    fun getApkCleanExecutor(): JunkExecutor {
         val tasks = mutableListOf<BaseTask>()
         tasks.add(getApkCacheTask())
         return JunkExecutor.Builder()
             .type(JunkConstants.Session.APK)
-            .task(tasks)
-            .cleanMonitor(monitor).build()
+            .task(tasks).build()
     }
+
     //残留清理
-    fun getResidualCleanExecutor(monitor: JunkExecutor.CleanMonitor? = null): JunkExecutor {
+    fun getResidualCleanExecutor(): JunkExecutor {
         val tasks = mutableListOf<BaseTask>()
         tasks.add(getUninstallResidueTask())
         return JunkExecutor.Builder()
             .type(JunkConstants.Session.UNINSTALL_RESIDUE)
             .task(tasks)
-            .cleanMonitor(monitor).build()
+            .build()
     }
 
     //微信深度清理
     fun getWxDeepCleanExecutor(
-        monitor: JunkExecutor.CleanMonitor? = null,
         silent: Boolean = false
     ): JunkExecutor {
         val tasks = mutableListOf<BaseTask>()
@@ -121,13 +120,11 @@ object CleanCooperation {
         tasks.addAll(getWxDeepTask())
         return JunkExecutor.Builder()
             .type(type)
-            .task(tasks)
-            .cleanMonitor(monitor).build()
+            .task(tasks).build()
     }
 
     //QQ深度清理
     fun getQQDeepCleanExecutor(
-        monitor: JunkExecutor.CleanMonitor? = null,
         silent: Boolean = false
     ): JunkExecutor {
         val tasks = mutableListOf<BaseTask>()
@@ -139,7 +136,6 @@ object CleanCooperation {
         tasks.addAll(getQQDeepTask())
         return JunkExecutor.Builder()
             .type(type)
-            .task(tasks)
-            .cleanMonitor(monitor).build()
+            .task(tasks).build()
     }
 }

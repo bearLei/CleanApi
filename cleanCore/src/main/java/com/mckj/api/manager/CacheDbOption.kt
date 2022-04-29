@@ -16,8 +16,10 @@ object CacheDbOption {
      * 插入扫描缓存
      * @param cacheDb 扫描对象
      */
-    fun insertCache(cacheDb: CacheDb) {
-        mCacheDbDao.insert(cacheDb)
+    fun insertCache(cacheDb: CacheDb?) {
+        cacheDb?.let {
+            mCacheDbDao.insert(it)
+        }
     }
 
     /**
@@ -29,7 +31,7 @@ object CacheDbOption {
         return mCacheDbDao.getCacheByType(type)
     }
 
-    fun getAllCache():List<CacheDb>?{
+    fun getAllCache(): List<CacheDb>? {
         return mCacheDbDao.getAllCacheList()
     }
 
@@ -37,7 +39,7 @@ object CacheDbOption {
     /**
      * 删除全部缓存对象
      */
-    fun deleteAll(){
+    fun deleteAll() {
         mCacheDbDao.deleteAll()
     }
 
@@ -45,7 +47,7 @@ object CacheDbOption {
      * 删除缓存对象
      * @param type 执行器对象
      */
-    fun deleteByType(type: Int){
+    fun deleteByType(type: Int) {
         mCacheDbDao.deleteByType(type)
     }
 }

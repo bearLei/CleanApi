@@ -1,16 +1,14 @@
 package com.mckj.api.client.base
 
 import android.util.Log
-import androidx.lifecycle.MutableLiveData
-import com.mckj.api.client.JunkConstants
+import androidx.lifecycle.LiveData
 import com.mckj.api.client.impl.ICleanCallBack
 import com.mckj.api.client.impl.IClientAbility
 import com.mckj.api.client.impl.IScanCallBack
-import com.mckj.api.client.task.JunkExecutorNew
-import com.mckj.api.entity.AppJunk
-import com.mckj.api.entity.CacheJunk
+import com.mckj.api.client.JunkExecutor
+import com.mckj.api.db.entity.CacheDb
 import com.mckj.api.entity.JunkInfo
-import com.mckj.api.entity.ScanBean
+import com.mckj.api.init.JunkInitializer
 import com.mckj.api.manager.CacheDbOption
 import com.mckj.api.util.FileUtils
 import com.mckj.api.util.RFileUtils
@@ -23,82 +21,32 @@ class JunkClientNew : IClientAbility {
     }
 
     /**
-     * 首页扫描数据
-     */
-    private val mHomeLiveData = MutableLiveData<ScanBean>()
-
-
-    /**
-     * @param executor 执行器
-     * 首页扫描
-     */
-    override fun scanByHome(executor: JunkExecutorNew) {
-        val cacheJunk = CacheJunk(junkSize = 0L, appJunks = mutableListOf())
-        val scanBean = ScanBean(junk = cacheJunk)
-        executor.scan(object : IScanCallBack {
-            override fun scanStart() {
-                scanBean.status = JunkConstants.ScanStatus.START
-                mHomeLiveData.postValue(scanBean)
-            }
-
-            override fun scanEnd(totalSize: Long, list: MutableList<AppJunk>) {
-                scanBean.status = JunkConstants.ScanStatus.COMPLETE
-                mHomeLiveData.postValue(scanBean)
-            }
-
-            override fun scanError() {
-                scanBean.status = JunkConstants.ScanStatus.ERROR
-                mHomeLiveData.postValue(scanBean)
-            }
-
-            override fun scanIdle(appJunk: AppJunk) {
-                scanBean.status = JunkConstants.ScanStatus.SCAN_IDLE
-                cacheJunk.junkSize += appJunk.junkSize
-                cacheJunk.appJunks?.add(appJunk)
-                mHomeLiveData.postValue(scanBean)
-            }
-        })
-    }
-
-    override fun scan(executorType: Int, iScanCallBack: IScanCallBack) {
-
-    }
-
-    override fun scan(executorType: Int) {
-
-    }
-
-    /**
-     * 普通执行器扫描
-     */
-    override fun scan(executor: JunkExecutorNew) {
-        executor.scan(object : IScanCallBack {
-            override fun scanStart() {
-
-            }
-
-            override fun scanEnd(totalSize: Long, list: MutableList<AppJunk>) {
-
-            }
-
-
-            override fun scanError() {
-
-            }
-
-            override fun scanIdle(appJunk: AppJunk) {
-
-            }
-        })
-    }
-
-    /**
+     * @param executorType 执行器类型
      * @param iScanCallBack 扫描回调
      */
-    override fun scan(executor: JunkExecutorNew, iScanCallBack: IScanCallBack) {
-        executor.scan(iScanCallBack)
+    override fun scan(executorType: Int, iScanCallBack: IScanCallBack) {
+        JunkInitializer.getExecutor(executorType)?.scan(iScanCallBack)
     }
 
+    /**
+     * @param executorType 执行器类型
+     */
+    override fun scan(executorType: Int): LiveData<CacheDb>? {
+        CacheDbOption.getCacheByType(executorType)?.let {
+            Log.d(TAG, "数据库命中缓存对象")
+            return it
+        } ?: let {
+            Log.d(TAG, "数据库未命中缓存对象:执行文件扫描")
+            JunkInitializer.scan(executorType)
+            return null
+        }
+    }
+
+    /**
+     * 清理
+     * @param list 移除的文件列表
+     * @param iCleanCallBack 清理回调
+     */
     override fun clean(list: MutableList<JunkInfo>, iCleanCallBack: ICleanCallBack) {
         var removeSizeTotal = 0L
         val removeJunks = mutableListOf<JunkInfo>()
@@ -113,10 +61,10 @@ class JunkClientNew : IClientAbility {
                 removeSizeTotal += next.junkSize
                 removeJunks.add(next)
                 Log.d(TAG, "清理中：${next.path}\n大小：${next.junkSize}")
-                notifyHomeCache(next)
                 iCleanCallBack.cleanIdle(next)
             }
             Log.d(TAG, "清理结束")
+            notifyDbCache(removeJunks)
             iCleanCallBack.cleanEnd(removeSizeTotal, removeJunks)
         }
     }
@@ -125,11 +73,14 @@ class JunkClientNew : IClientAbility {
 
     }
 
-    override fun stop(executor: JunkExecutorNew) {
+    override fun stop(executor: JunkExecutor) {
 
     }
 
 
+    /**
+     * 移除文件
+     */
     private fun delete(junkInfo: JunkInfo): Boolean {
         junkInfo.uri?.let {
             return RFileUtils.deleteFile(it)
@@ -138,13 +89,30 @@ class JunkClientNew : IClientAbility {
         }
     }
 
-    private fun notifyHomeCache(junkInfo: JunkInfo) {
-//        CacheDbOption.getCacheByType()
+    /**
+     * 更新缓存数据库
+     */
+    private fun notifyDbCache(junks: MutableList<JunkInfo>) {
+        val allCache = CacheDbOption.getAllCache()
+        if (allCache.isNullOrEmpty()) {
+            Log.d(TAG, "notify:allCache is null or empty")
+            return
+        }
+        allCache.forEach {
+            it.scanBean?.junk?.let { cacheJunk ->
+                cacheJunk.appJunks?.forEach { appJunk ->
+                    val iterator = appJunk.junks?.iterator()
+                    while (iterator?.hasNext() == true) {
+                        val next = iterator.next()
+                        if (junks.contains(next)) {
+                            iterator.remove()
+                            appJunk.junkSize = appJunk.junkSize - next.junkSize
+                            cacheJunk.junkSize = cacheJunk.junkSize - next.junkSize
+                        }
+                    }
+                }
+            }
+            CacheDbOption.insertCache(it)
+        }
     }
-
-    fun getHomeScanLiveData(): MutableLiveData<ScanBean> {
-        return mHomeLiveData
-    }
-
-
 }
