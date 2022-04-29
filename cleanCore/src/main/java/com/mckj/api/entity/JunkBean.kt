@@ -109,4 +109,4 @@ data class QFileBean(
 }
 
 //扫描信息
-data class ScanBean(var status: Int = JunkConstants.ScanStatus.START, var junk: CacheJunk? = null)
+data class ScanBean(var status: Int = JunkConstants.ScanStatus.START, var junk: CacheJunk)

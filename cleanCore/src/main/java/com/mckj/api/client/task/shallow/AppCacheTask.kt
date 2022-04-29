@@ -48,7 +48,6 @@ class AppCacheTask constructor(var pkgName: String, var appName: String) : BaseT
                 AppJunk(
                     appName = "",
                     packageName = "",
-                    icon = null,
                     junkSize = 0,
                     junks = null,
                 )

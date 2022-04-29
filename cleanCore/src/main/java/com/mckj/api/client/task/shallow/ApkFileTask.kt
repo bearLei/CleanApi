@@ -116,7 +116,6 @@ class ApkFileTask : BaseTask() {
                 type = JunkConstants.Session.APK,
                 appName = name,
                 packageName = info.packageName,
-                icon = AppUtil.getAppIcon(CleanCoreMod.app, info),
                 junkSize = size,
                 junks = details,
             )

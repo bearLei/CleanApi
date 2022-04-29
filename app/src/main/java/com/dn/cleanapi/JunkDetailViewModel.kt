@@ -88,7 +88,6 @@ class JunkDetailViewModel : ViewModel() {
                         type = bean.type,
                         appName = bean.appName,
                         packageName = bean.packageName,
-                        icon = bean.icon,
                         junkSize = bean.junkSize,
                         junkDescription = bean.junkDescription,
                         junks = temp

@@ -1,7 +1,9 @@
 package com.mckj.api.client.base
 
+import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import com.mckj.api.client.JunkConstants
+import com.mckj.api.client.impl.ICleanCallBack
 import com.mckj.api.client.impl.IClientAbility
 import com.mckj.api.client.impl.IScanCallBack
 import com.mckj.api.client.task.JunkExecutorNew
@@ -9,6 +11,8 @@ import com.mckj.api.entity.AppJunk
 import com.mckj.api.entity.CacheJunk
 import com.mckj.api.entity.JunkInfo
 import com.mckj.api.entity.ScanBean
+import com.mckj.api.util.FileUtils
+import com.mckj.api.util.RFileUtils
 
 class JunkClientNew : IClientAbility {
 
@@ -21,6 +25,9 @@ class JunkClientNew : IClientAbility {
      * 首页扫描数据
      */
     private val mHomeLiveData = MutableLiveData<ScanBean>()
+
+
+
 
     /**
      * @param executor 执行器
@@ -54,6 +61,14 @@ class JunkClientNew : IClientAbility {
         })
     }
 
+    override fun scan(executorType: Int, iScanCallBack: IScanCallBack) {
+
+    }
+
+    override fun scan(executorType: Int) {
+
+    }
+
     /**
      * 普通执行器扫描
      */
@@ -85,8 +100,24 @@ class JunkClientNew : IClientAbility {
         executor.scan(iScanCallBack)
     }
 
-    override fun clean(list: MutableList<JunkInfo>) {
-
+    override fun clean(list: MutableList<JunkInfo>, iCleanCallBack: ICleanCallBack) {
+        var removeSizeTotal = 0L
+        val removeJunks = mutableListOf<JunkInfo>()
+        list.iterator().run {
+            iCleanCallBack.cleanStart()
+            while (hasNext()) {
+                val next = next()
+                if (!delete(next)) {
+                    continue
+                }
+                removeSizeTotal += next.junkSize
+                removeJunks.add(next)
+                Log.d(JunkExecutorNew.TAG, "清理：${next.path}---大小：${next.junkSize}")
+                notifyHomeCache(next)
+                iCleanCallBack.cleanIdle(next)
+            }
+            iCleanCallBack.cleanEnd(removeSizeTotal, removeJunks)
+        }
     }
 
     override fun silentClean(list: MutableList<JunkInfo>) {
@@ -97,6 +128,35 @@ class JunkClientNew : IClientAbility {
 
     }
 
+
+    private fun delete(junkInfo: JunkInfo): Boolean {
+        junkInfo.uri?.let {
+            return RFileUtils.deleteFile(it)
+        } ?: let {
+            return FileUtils.delete(junkInfo.path)
+        }
+    }
+
+    private fun notifyHomeCache(junkInfo: JunkInfo) {
+        val homeValue = getHomeScanLiveData().value
+        homeValue?.junk?.let {
+            it.appJunks?.forEach { appJunk ->
+                val iterator = appJunk.junks?.iterator()
+                while (iterator?.hasNext() == true) {
+                    val next = iterator.next()
+                    if (next.path == junkInfo.path) {
+                        iterator.remove()//移除颗粒
+                        appJunk.junkSize = appJunk.junkSize - junkInfo.junkSize//app统计颗粒减少
+                        it.junkSize = it.junkSize - junkInfo.junkSize//总扫描大小减少
+                    }
+                }
+            }
+        }
+//        val scanBean = ScanBean()
+//        scanBean.status = JunkConstants.ScanStatus.CLEAN
+//        scanBean.junk = homeValue?.junk
+//        getHomeScanLiveData().postValue(scanBean)
+    }
 
     fun getHomeScanLiveData(): MutableLiveData<ScanBean> {
         return mHomeLiveData

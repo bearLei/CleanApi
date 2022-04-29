@@ -29,7 +29,6 @@ class JunkDetailChildViewHolder : DataBindingViewBinder<MenuJunkChild>() {
         }
 
         override fun bindData(t: MenuJunkChild) {
-            mBinding.itemAvatarIv.setImageDrawable(t.iJunkEntity.icon)
             mBinding.itemNameTv.text = t.iJunkEntity.appName
             val desc = t.iJunkEntity.junkDescription?.description ?: ""
             if (desc.isNotEmpty()) {

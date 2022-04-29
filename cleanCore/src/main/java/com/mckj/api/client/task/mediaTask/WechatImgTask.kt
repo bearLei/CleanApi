@@ -25,7 +25,6 @@ class WechatImgTask : BaseTask() {
             type = JunkConstants.AppCacheType.IMG_CACHE,
             appName = "微信",
             packageName = "com.tencent.mm",
-            icon = null,
             junkDescription = JunkDescription(title = "微信图片缓存", description = "微信图片缓存")
         )
         val imgList = PictureImpl().getMediaListByName(

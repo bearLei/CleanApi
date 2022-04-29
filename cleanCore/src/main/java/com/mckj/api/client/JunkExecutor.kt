@@ -47,51 +47,51 @@ class JunkExecutor internal constructor(builder: Builder) {
 
 
     fun scan() {
-        ScopeHelper.launch {
-            withContext(Dispatchers.IO) {
-                val scanBean = ScanBean()
-                start(scanBean)
-                val cacheJunk = CacheJunk(junkSize = 0L, appJunks = mutableListOf())
-                scanBean.junk = cacheJunk
-                if (mScanTask.isNullOrEmpty()) {
-                    Log.d(TAG, "scanTask  must not be empty")
-                    error(scanBean)
-                    return@withContext
-                }
-                if (mRunning.get()) {
-                    error(scanBean)
-                    Log.d(TAG, "scanTask  has bean started")
-                    return@withContext
-                }
-                mScanTask.forEach {
-                    if (mOptEnable.get()) {
-                        mRunning.set(true)
-                        val isSuccess = it.scan { appJunk ->
-                            cacheJunk.appJunks?.add(appJunk)
-                            cacheJunk.junkSize += appJunk.junkSize
-                            startIdle(scanBean)
-                        }
-                        if (isSuccess) {
-                            startIdle(scanBean)
-                            delay(100)
-                        }
-                    }
-                }
-                complete(scanBean)
-                mRunning.set(false)
-            }
-        }
+//        ScopeHelper.launch {
+//            withContext(Dispatchers.IO) {
+//                val scanBean = ScanBean()
+//                start(scanBean)
+//                val cacheJunk = CacheJunk(junkSize = 0L, appJunks = mutableListOf())
+//                scanBean.junk = cacheJunk
+//                if (mScanTask.isNullOrEmpty()) {
+//                    Log.d(TAG, "scanTask  must not be empty")
+//                    error(scanBean)
+//                    return@withContext
+//                }
+//                if (mRunning.get()) {
+//                    error(scanBean)
+//                    Log.d(TAG, "scanTask  has bean started")
+//                    return@withContext
+//                }
+//                mScanTask.forEach {
+//                    if (mOptEnable.get()) {
+//                        mRunning.set(true)
+//                        val isSuccess = it.scan { appJunk ->
+//                            cacheJunk.appJunks?.add(appJunk)
+//                            cacheJunk.junkSize += appJunk.junkSize
+//                            startIdle(scanBean)
+//                        }
+//                        if (isSuccess) {
+//                            startIdle(scanBean)
+//                            delay(100)
+//                        }
+//                    }
+//                }
+//                complete(scanBean)
+//                mRunning.set(false)
+//            }
+//        }
     }
 
     fun loadCache(cacheJunk: CacheJunk?) {
-        ScopeHelper.launch {
-            withContext(Dispatchers.IO) {
-                val scanBean = ScanBean(status = JunkConstants.ScanStatus.CACHE)
-                scanBean.junk = cacheJunk
-                mScanData.postValue(scanBean)
-                Log.d(TAG, "scan cache")
-            }
-        }
+//        ScopeHelper.launch {
+//            withContext(Dispatchers.IO) {
+//                val scanBean = ScanBean(status = JunkConstants.ScanStatus.CACHE)
+//                scanBean.junk = cacheJunk
+//                mScanData.postValue(scanBean)
+//                Log.d(TAG, "scan cache")
+//            }
+//        }
     }
 
     /**

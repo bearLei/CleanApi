@@ -71,7 +71,6 @@ class RamCacheTask : BaseTask() {
             type = JunkConstants.AppCacheType.RAM,
             appName = appName,
             packageName = info.packageName,
-            icon = icon,
             junkSize = 1,
             junkDescription = JunkDescription(title = "内存缓存"),
             junks = detailList

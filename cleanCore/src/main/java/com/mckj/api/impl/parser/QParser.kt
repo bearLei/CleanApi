@@ -70,7 +70,6 @@ class QParser : AbsParser() {
                     type,
                     appName = name,
                     packageName = key,
-                    icon = icon,
                     junkSize = totalSize,
                     junks = junks
                 )

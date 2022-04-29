@@ -28,7 +28,7 @@ class JunkExecutorNew internal constructor(builder: Builder) {
 
     private val mScanTask: List<BaseTask>? = builder.scanTasks
 
-    private val mType: Int? = builder.mType
+    val mType: Int? = builder.mType
 
     /**
      * 是否允许操作
@@ -46,56 +46,44 @@ class JunkExecutorNew internal constructor(builder: Builder) {
      * 扫描
      */
     fun scan(iScanCallBack: IScanCallBack) {
-        ScopeHelper.launch {
-            withContext(Dispatchers.IO) {
-                if (mScanTask.isNullOrEmpty()) {
-                    Log.d(TAG, "scanTask  must not be empty")
-                    withContext(Dispatchers.Main) {
-                        iScanCallBack.scanError()
-                    }
-                    return@withContext
-                }
-                if (mRunning.get()) {
-                    withContext(Dispatchers.Main) {
-                        iScanCallBack.scanError()
-                    }
-                    Log.d(TAG, "scanTask  has bean started")
-                    return@withContext
-                }
-                var totalSize = 0L
-                val junks = mutableListOf<AppJunk>()
-                iScanCallBack.scanStart()
-                Log.d(TAG, "scanStart!!")
-                try {
-                    mScanTask.forEach {
-                        if (mOptEnable.get()) {
-                            mRunning.set(true)
-                            it.scan { appJunk ->
-                                totalSize += appJunk.junkSize
-                                junks.add(appJunk)
-                                Log.d(TAG, "scanning...")
-                                ScopeHelper.launch {
-                                    iScanCallBack.scanIdle(appJunk)
-                                }
-                            }
-                        }
-                    }
-                } catch (e: Exception) {
-                    withContext(Dispatchers.Main) {
-                        iScanCallBack.scanError()
-                    }
-                    Log.d(TAG, "scanError!!")
-                    mOptEnable.set(false)
-                    Log.d(TAG, "scanTask  error:$e")
-                } finally {
-                    Log.d(TAG, "scanEnd:scanSize:$totalSize")
-                    withContext(Dispatchers.Main) {
-                        iScanCallBack.scanEnd(totalSize, junks)
-                    }
-                }
-                mRunning.set(false)
-            }
+
+        if (mScanTask.isNullOrEmpty()) {
+            Log.d(TAG, "scanTask  must not be empty")
+            iScanCallBack.scanError()
+            return
         }
+        if (mRunning.get()) {
+            iScanCallBack.scanError()
+            Log.d(TAG, "scanTask  has bean started")
+            return
+        }
+        var totalSize = 0L
+        val junks = mutableListOf<AppJunk>()
+        iScanCallBack.scanStart()
+        Log.d(TAG, "scanStart!!")
+        try {
+            mScanTask.forEach {
+                if (mOptEnable.get()) {
+                    mRunning.set(true)
+                    it.scan { appJunk ->
+                        totalSize += appJunk.junkSize
+                        junks.add(appJunk)
+                        Log.d(TAG, "scanning...")
+                        iScanCallBack.scanIdle(appJunk)
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            iScanCallBack.scanError()
+            Log.d(TAG, "scanError!!")
+            mOptEnable.set(false)
+            Log.d(TAG, "scanTask  error:$e")
+        } finally {
+            Log.d(TAG, "scanEnd:scanSize:$totalSize")
+            iScanCallBack.scanEnd(totalSize, junks)
+        }
+        mRunning.set(false)
+
     }
 
     /**
@@ -116,7 +104,7 @@ class JunkExecutorNew internal constructor(builder: Builder) {
                     removeJunks.add(next)
                     Log.d(TAG, "清理：${next.path}---大小：${next.junkSize}")
                     if (isHomeCacheExecutor()) {
-                        Log.d(TAG,"首页缓存执行器命中，更新首页状态")
+                        Log.d(TAG, "首页缓存执行器命中，更新首页状态")
                         notifyHomeCache(next)
                     }
                     iCleanCallBack.cleanIdle(next)
@@ -160,10 +148,10 @@ class JunkExecutorNew internal constructor(builder: Builder) {
                 }
             }
         }
-        val scanBean = ScanBean()
-        scanBean.status = JunkConstants.ScanStatus.CLEAN
-        scanBean.junk = homeValue?.junk
-        JunkClientNew.instance.getHomeScanLiveData().postValue(scanBean)
+//        val scanBean = ScanBean()
+//        scanBean.status = JunkConstants.ScanStatus.CLEAN
+//        scanBean.junk = homeValue?.junk
+//        JunkClientNew.instance.getHomeScanLiveData().postValue(scanBean)
     }
 
 

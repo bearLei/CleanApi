@@ -28,7 +28,6 @@ class WechatVideoTask : BaseTask() {
             type = JunkConstants.AppCacheType.VIDEO_CACHE,
             appName = "微信",
             packageName = "com.tencent.mm",
-            icon = null,
             junkDescription = JunkDescription(title = "微信视频缓存", description = "微信视频缓存")
         )
         val videos = getVideo()

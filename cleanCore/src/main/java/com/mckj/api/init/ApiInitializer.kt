@@ -13,6 +13,7 @@ import com.mckj.api.util.CleanCoreMod
 class ApiInitializer : Initializer<Boolean> {
     override fun create(context: Context): Boolean {
         CleanCoreMod.app = context
+//        JunkInitializer.initializeDb()
         return true
     }
 

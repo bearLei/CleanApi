@@ -80,7 +80,6 @@ class CommonParser : AbsParser() {
                     type,
                     appName = name,
                     packageName = key,
-                    icon = icon,
                     junkSize = size,
                     junks = junks
                 )

@@ -32,7 +32,6 @@ class WechatFileTask : BaseTask() {
             type = JunkConstants.AppCacheType.DOCUMENT_CACHE,
             appName = "微信",
             packageName = "com.tencent.mm",
-            icon = null,
             junkDescription = JunkDescription(title = "微信文档缓存", description = "微信文档缓存")
         )
         try {

@@ -25,7 +25,6 @@ class QQImgTask : BaseTask() {
             type = JunkConstants.AppCacheType.IMG_CACHE,
             appName = "QQ",
             packageName = "com.tencent.mobileqq",
-            icon = null,
             junkDescription = JunkDescription(title = "QQ图片缓存", description = "QQ图片缓存")
         )
         val imgList = PictureImpl().getMediaListByName(

@@ -10,9 +10,11 @@ desc:
  */
 interface IClientAbility {
     fun scanByHome(executor: JunkExecutorNew)
+    fun scan(executorType: Int, iScanCallBack: IScanCallBack)
+    fun scan(executorType: Int)
     fun scan(executor: JunkExecutorNew, iScanCallBack: IScanCallBack)
     fun scan(executor: JunkExecutorNew)
-    fun clean(list: MutableList<JunkInfo>)
+    fun clean(list: MutableList<JunkInfo>, iCleanCallBack: ICleanCallBack)
     fun silentClean(list: MutableList<JunkInfo>)
     fun stop(executor: JunkExecutorNew)
 }
