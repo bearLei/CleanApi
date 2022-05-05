@@ -3,16 +3,15 @@ package com.dn.cleanapi
 import android.Manifest
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.mckj.api.client.JunkConstants
-import com.mckj.api.client.base.AutoScanner
+import com.mckj.api.client.base.HomeAutoScanner
+import com.mckj.api.client.base.JunkClient
 import com.mckj.api.entity.AppJunk
 import com.mckj.api.entity.ScanBean
 import com.mckj.api.init.JunkInitializer
-import com.mckj.api.manager.CacheDbOption
 import com.mckj.api.util.ScopeHelper
 import com.tbruyelle.rxpermissions3.RxPermissions
 import kotlinx.coroutines.Dispatchers
@@ -60,9 +59,8 @@ class TestActivity : AppCompatActivity() {
         }
     }
 
-
+    private val autoCleaner = HomeAutoScanner(JunkConstants.Session.APP_CACHE,3*1000L)
     private fun subscribeUi() {
-        val autoCleaner = AutoScanner(JunkConstants.Session.APP_CACHE,100)
         lifecycle.addObserver(autoCleaner)
         autoCleaner.cacheJunkLiveData.observe(this) {
             mScanBean = it
@@ -80,17 +78,15 @@ class TestActivity : AppCompatActivity() {
             mResult.text =
                 "扫描状态：$status\n扫描结果：${FileUtil.getFileSizeText(junkSize!!)}\n扫描耗时：$cost"
         }
+        startScanHome()
     }
 
     /**
      * 首页扫描
      */
     private fun startScanHome() {
-        ScopeHelper.launch {
-            withContext(Dispatchers.IO) {
-                JunkInitializer.scan(JunkConstants.Session.APP_CACHE)
-            }
-        }
+        mStartTime = System.currentTimeMillis()
+        autoCleaner.scan()
     }
 
 

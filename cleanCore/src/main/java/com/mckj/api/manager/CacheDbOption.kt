@@ -27,7 +27,11 @@ object CacheDbOption {
      * @param type 执行器类型
      * @return 扫描对象，LiveData包裹，可实时更新
      */
-    fun getCacheByType(type: Int): LiveData<CacheDb>? {
+    fun getCacheLiveDataByType(type: Int): LiveData<CacheDb>? {
+        return mCacheDbDao.getCacheLiveDataByType(type)
+    }
+
+    fun getCacheByType(type: Int): CacheDb? {
         return mCacheDbDao.getCacheByType(type)
     }
 

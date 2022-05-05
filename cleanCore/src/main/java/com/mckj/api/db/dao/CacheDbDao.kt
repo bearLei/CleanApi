@@ -14,7 +14,10 @@ import com.mckj.api.db.entity.CacheDb
 interface CacheDbDao {
 
     @Query("SELECT * FROM cachDb WHERE executorType = :type")
-    fun getCacheByType(type:Int): LiveData<CacheDb>?
+    fun getCacheLiveDataByType(type:Int): LiveData<CacheDb>?
+
+    @Query("SELECT * FROM cachDb WHERE executorType = :type")
+    fun getCacheByType(type: Int):CacheDb?
 
     @Query("SELECT * FROM cachDb")
     fun getAllCacheList(): List<CacheDb>?

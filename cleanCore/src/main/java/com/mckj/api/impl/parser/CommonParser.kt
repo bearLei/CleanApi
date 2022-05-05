@@ -110,6 +110,7 @@ class CommonParser : AbsParser() {
                     )
                 )
                 consume.accept(file.length())
+                return
             }
             listFiles.forEach {
                 if (it.isDirectory) {

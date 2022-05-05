@@ -1,8 +1,6 @@
 package com.mckj.api.client.impl
 
-import androidx.lifecycle.LiveData
 import com.mckj.api.client.JunkExecutor
-import com.mckj.api.db.entity.CacheDb
 import com.mckj.api.entity.JunkInfo
 
 /**
@@ -12,7 +10,7 @@ desc:
  */
 interface IClientAbility {
     fun scan(executorType: Int, iScanCallBack: IScanCallBack)
-    fun scan(executorType: Int):LiveData<CacheDb>?
+    fun scan(executorType: Int)
     fun clean(list: MutableList<JunkInfo>, iCleanCallBack: ICleanCallBack)
     fun silentClean(list: MutableList<JunkInfo>)
     fun stop(executor: JunkExecutor)

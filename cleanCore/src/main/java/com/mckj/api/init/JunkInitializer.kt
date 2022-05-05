@@ -29,7 +29,6 @@ object JunkInitializer {
 
         // TODO:  启动1个worker任务，处理定时清理功能
         register()
-        preScan()
     }
 
     /**

@@ -1,7 +1,6 @@
 package com.mckj.api.client.base
 
 import android.util.Log
-import androidx.lifecycle.LiveData
 import com.mckj.api.client.JunkConstants
 import com.mckj.api.client.impl.ICleanCallBack
 import com.mckj.api.client.impl.IClientAbility
@@ -12,7 +11,6 @@ import com.mckj.api.entity.AppJunk
 import com.mckj.api.entity.CacheJunk
 import com.mckj.api.entity.JunkInfo
 import com.mckj.api.entity.ScanBean
-import com.mckj.api.init.JunkInitializer
 import com.mckj.api.manager.CacheDbOption
 import com.mckj.api.util.FileUtils
 import com.mckj.api.util.RFileUtils
@@ -29,22 +27,15 @@ class JunkClient : IClientAbility {
      * @param iScanCallBack 扫描回调
      */
     override fun scan(executorType: Int, iScanCallBack: IScanCallBack) {
-        realScan(executorType)
+        realScan(executorType, iScanCallBack)
     }
 
     /**
      * @param executorType 执行器类型
      * @return
      */
-    override fun scan(executorType: Int): LiveData<CacheDb>? {
-        CacheDbOption.getCacheByType(executorType)?.let {
-            Log.d(TAG, "数据库命中缓存对象")
-            return it
-        } ?: let {
-            Log.d(TAG, "数据库未命中缓存对象:执行文件扫描")
-            realScan(executorType)
-            return null
-        }
+    override fun scan(executorType: Int) {
+        realScan(executorType)
     }
 
     /**
@@ -105,14 +96,19 @@ class JunkClient : IClientAbility {
         }
         allCache.forEach {
             it.scanBean?.junk?.let { cacheJunk ->
-                cacheJunk.appJunks?.forEach { appJunk ->
+                val cacheJunkIterator = cacheJunk.appJunks?.iterator()
+                while (cacheJunkIterator?.hasNext() == true) {
+                    val appJunk = cacheJunkIterator.next()
                     val iterator = appJunk.junks?.iterator()
                     while (iterator?.hasNext() == true) {
                         val next = iterator.next()
                         if (junks.contains(next)) {
-                            iterator.remove()
                             appJunk.junkSize = appJunk.junkSize - next.junkSize
                             cacheJunk.junkSize = cacheJunk.junkSize - next.junkSize
+                            iterator.remove()
+//                            if (appJunk.junks.isNullOrEmpty()) {
+//                                cacheJunkIterator.remove()
+//                            }
                         }
                     }
                 }
@@ -123,13 +119,14 @@ class JunkClient : IClientAbility {
 
 
     /**
-     * @param executor
-     * 文件扫描执行器
+     *真实扫描
+     * @param type 扫描的执行器类型
+     * @param iScanCallBack 扫描回调
      */
-    fun realScan(type: Int) {
+    fun realScan(type: Int, iScanCallBack: IScanCallBack? = null) {
         val executor = ExecutorManager.getInstance().getExecutor(type) ?: return
         var cacheDb: CacheDb? = null
-        CacheDbOption.getCacheByType(type)?.let {
+        CacheDbOption.getCacheLiveDataByType(type)?.let {
             it.value?.apply {
                 cacheDb = this
             }
@@ -144,15 +141,17 @@ class JunkClient : IClientAbility {
         try {
             executor.scan(object : IScanCallBack {
                 override fun scanStart() {
+                    scanBean.status = JunkConstants.ScanStatus.START
                     Log.d(
                         TAG,
                         "执行器：${executor.mType}\nscanStart...执行线程${Thread.currentThread().name}"
                     )
-                    scanBean.status = JunkConstants.ScanStatus.START
                     CacheDbOption.insertCache(cacheDb)
+                    iScanCallBack?.scanStart()
                 }
 
                 override fun scanEnd(totalSize: Long, list: MutableList<AppJunk>) {
+                    iScanCallBack?.scanEnd(totalSize, list)
                     scanBean.status = JunkConstants.ScanStatus.COMPLETE
                     Log.d(
                         TAG,
@@ -163,12 +162,14 @@ class JunkClient : IClientAbility {
                 }
 
                 override fun scanError() {
+                    iScanCallBack?.scanError()
                     scanBean.status = JunkConstants.ScanStatus.ERROR
                     Log.d(TAG, "执行器：${executor.mType}\nscanError")
                     CacheDbOption.insertCache(cacheDb)
                 }
 
                 override fun scanIdle(appJunk: AppJunk) {
+                    iScanCallBack?.scanIdle(appJunk)
                     scanBean.status = JunkConstants.ScanStatus.SCAN_IDLE
                     scanBean.junk.appJunks?.add(appJunk)
                     cacheJunk.junkSize += appJunk.junkSize
@@ -185,4 +186,38 @@ class JunkClient : IClientAbility {
             Log.d(TAG, "异常：$e")
         }
     }
+
+    fun scanBackground(type: Int) {
+        val executor = ExecutorManager.getInstance().getExecutor(type) ?: return
+        try {
+            executor.scan(object : IScanCallBack {
+                override fun scanStart() {
+
+                }
+
+                override fun scanEnd(totalSize: Long, list: MutableList<AppJunk>) {
+                    CacheDbOption.getCacheLiveDataByType(type)?.let {
+                        it.value?.apply {
+                            this.updateTime = System.currentTimeMillis()
+                            this.scanBean?.junk?.junkSize = totalSize
+                            this.scanBean?.junk?.appJunks = list
+                            CacheDbOption.insertCache(this)
+                            Log.d(TAG, "后台自动扫描：\n大小：$totalSize")
+                        }
+                    }
+                }
+
+                override fun scanError() {
+
+                }
+
+                override fun scanIdle(appJunk: AppJunk) {
+
+                }
+            })
+        } catch (e: Exception) {
+            Log.d(TAG, "后台自动扫描失败：$e")
+        }
+    }
+
 }
